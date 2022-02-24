@@ -120,7 +120,7 @@ object Reducer {
 
     case Expression.ApplySelfTail(sym, formals, actuals, tpe, loc) =>
       val as = actuals.map(visitExp(_, env0))
-      val fs = formals map {
+      val fs = formals.map {
         case OccurrenceAst.FormalParam(sym, mod, tpe, loc) => LiftedAst.FormalParam(sym, mod, tpe, loc)
       }
       LiftedAst.Expression.ApplySelfTail(sym, fs, as, tpe, loc)
@@ -147,7 +147,7 @@ object Reducer {
 
     case Expression.Branch(exp, branches, tpe, loc) =>
       val e = visitExp(exp, env0)
-      val bs = branches map {
+      val bs = branches.map {
         case (sym, br) => sym -> visitExp(br, env0)
       }
       LiftedAst.Expression.Branch(e, bs, tpe, loc)
@@ -192,7 +192,7 @@ object Reducer {
       LiftedAst.Expression.Index(b, offset, tpe, loc)
 
     case Expression.Tuple(elms, tpe, loc) =>
-      val es = elms map (visitExp(_, env0))
+      val es = elms.map (visitExp(_, env0))
       LiftedAst.Expression.Tuple(es, tpe, loc)
 
     case Expression.RecordEmpty(tpe, loc) =>
@@ -212,7 +212,7 @@ object Reducer {
       LiftedAst.Expression.RecordRestrict(field, r, tpe, loc)
 
     case Expression.ArrayLit(elms, tpe, loc) =>
-      val es = elms map (visitExp(_, env0))
+      val es = elms.map (visitExp(_, env0))
       LiftedAst.Expression.ArrayLit(es, tpe, loc)
 
     case Expression.ArrayNew(elm, len, tpe, loc) =>
@@ -260,7 +260,7 @@ object Reducer {
 
     case Expression.TryCatch(exp, rules, tpe, loc) =>
       val e = visitExp(exp, env0)
-      val rs = rules map {
+      val rs = rules.map {
         case OccurrenceAst.CatchRule(sym, clazz, body) =>
           val b = visitExp(body, env0)
           LiftedAst.CatchRule(sym, clazz, b)
@@ -268,7 +268,7 @@ object Reducer {
       LiftedAst.Expression.TryCatch(e, rs, tpe, loc)
 
     case Expression.InvokeConstructor(constructor, args, tpe, loc) =>
-      val as = args map (visitExp(_, env0))
+      val as = args.map (visitExp(_, env0))
       LiftedAst.Expression.InvokeConstructor(constructor, as, tpe, loc)
 
     case Expression.InvokeMethod(method, exp, args, tpe, loc) =>
@@ -310,7 +310,7 @@ object Reducer {
       LiftedAst.Expression.PutChannel(e1, e2, tpe, loc)
 
     case Expression.SelectChannel(rules, default, tpe, loc) =>
-      val rs = rules map {
+      val rs = rules.map {
         case OccurrenceAst.SelectChannelRule(sym, chan, exp) =>
           val c = visitExp(chan, env0)
           val e = visitExp(exp, env0)
