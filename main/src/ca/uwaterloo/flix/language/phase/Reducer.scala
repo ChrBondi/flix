@@ -36,7 +36,7 @@ object Reducer {
   /**
    * Returns an optimized version of the given AST `root`.
    */
-  def run(root: OccurrenceAst.Root)(implicit flix: Flix): Validation[LiftedAst.Root, CompilationMessage] = flix.phase("Inliner") {
+  def run(root: OccurrenceAst.Root)(implicit flix: Flix): Validation[LiftedAst.Root, CompilationMessage] = flix.phase("Reducer") {
     val defs = root.defs.map {
       case (sym, defn) =>
         val fparams = defn.fparams.map { case OccurrenceAst.FormalParam(sym, mod, tpe, loc) => LiftedAst.FormalParam(sym, mod, tpe, loc) }
