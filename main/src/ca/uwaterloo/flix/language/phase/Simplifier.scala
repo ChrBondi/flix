@@ -580,7 +580,7 @@ object Simplifier {
           val freshVar = Symbol.freshVarSym("innerTag" + Flix.Delimiter, BoundBy.Let, loc)
           val inner = patternMatchList(pat :: ps, freshVar :: vs, guard, succ, fail)
           val purity1 = inner.purity
-          val consequent = SimplifiedAst.Expression.Let(freshVar, SimplifiedAst.Expression.Untag(sym, tag, SimplifiedAst.Expression.Var(v, tpe, loc), pat.tpe, purity1, loc), inner, succ.tpe, purity1, loc)
+          val consequent = SimplifiedAst.Expression.Let(freshVar, SimplifiedAst.Expression.Untag(sym, tag, SimplifiedAst.Expression.Var(v, tpe, loc), pat.tpe, Pure, loc), inner, succ.tpe, purity1, loc)
           val purity2 = combine(cond.purity, consequent.purity, fail.purity)
           SimplifiedAst.Expression.IfThenElse(cond, consequent, fail, succ.tpe, purity2, loc)
 

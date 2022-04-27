@@ -284,9 +284,14 @@ object Inliner {
       val e2 = visitExp(exp2, subst0)
       LiftedAst.Expression.LetRec(varSym, index, defSym, e1, e2, tpe, purity, loc)
 
-    case OccurrenceAst.Expression.Is(sym, tag, exp, purity, loc) =>
+    case OccurrenceAst.Expression.Is(sym, tag0, exp, purity0, loc) =>
       val e = visitExp(exp, subst0)
-      LiftedAst.Expression.Is(sym, tag, e, purity, loc)
+      e match {
+        case LiftedAst.Expression.Tag(_, tag1, _, tpe, purity1, loc)
+          if tag0 == tag1 && purity0 == Pure && purity1 == Pure =>
+            LiftedAst.Expression.True(loc)
+        case _ => LiftedAst.Expression.Is(sym, tag0, e, purity0, loc)
+      }
 
     case OccurrenceAst.Expression.Tag(sym, tag, exp, tpe, purity, loc) =>
       val e = visitExp(exp, subst0)
@@ -527,6 +532,8 @@ object Inliner {
     case LiftedAst.Expression.BigInt(_, _) => true
     case LiftedAst.Expression.Str(_, _) => true
     case LiftedAst.Expression.Var(_, _, _) => true
+    case LiftedAst.Expression.Tag(_, _, exp, _, _, _) => isTrivialExp(exp)
+    case LiftedAst.Expression.Untag(_, _, exp, _, _, _) => isTrivialExp(exp)
     case _ => false
   }
 
