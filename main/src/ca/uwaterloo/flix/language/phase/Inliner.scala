@@ -19,7 +19,7 @@ package ca.uwaterloo.flix.language.phase
 import ca.uwaterloo.flix.api.Flix
 import ca.uwaterloo.flix.language.CompilationMessage
 import ca.uwaterloo.flix.language.ast.OccurrenceAst.Occur._
-import ca.uwaterloo.flix.language.ast.OccurrenceAst.Root
+import ca.uwaterloo.flix.language.ast.OccurrenceAst.{Expression, Root}
 import ca.uwaterloo.flix.language.ast.Purity.{Impure, Pure}
 import ca.uwaterloo.flix.language.ast.{LiftedAst, OccurrenceAst, Purity, SemanticOperator, Symbol}
 import ca.uwaterloo.flix.util.Validation
@@ -248,13 +248,14 @@ object Inliner {
       /// Case 1:
       /// If `sym` is never used (it is `Dead`)  and `exp1` is pure, so it has no side effects, then it is safe to remove `sym`
       /// Both code size and runtime are reduced
-      if (isDeadAndPure(occur, exp1.purity)) {
+      val isDead = if (flix.disableEffect) occur == Dead && isAlwaysPure(exp1) else isDeadAndPure(occur, exp1.purity)
+      if (isDead) {
         visitExp(exp2, subst0)
       } else {
         /// Case 2:
         /// If `exp1` occurs once and it is pure, then it is safe to inline.
         /// There is a small decrease in code size and runtime.
-        val wantToPreInline = isUsedOnceAndPure(occur, exp1.purity)
+        val wantToPreInline = if (flix.disableEffect) occur == Once && isAlwaysPure(exp1) else isUsedOnceAndPure(occur, exp1.purity)
         if (wantToPreInline) {
           val subst1 = subst0 + (sym -> Expression.OccurrenceExp(exp1))
           visitExp(exp2, subst1)
@@ -263,7 +264,7 @@ object Inliner {
           /// Case 3:
           /// If `e1` is trivial and pure, then it is safe to inline.
           // Code size and runtime are not impacted, because only trivial expressions are inlined
-          val wantToPostInline = isTrivialAndPure(e1, exp1.purity) && occur != DontInline
+          val wantToPostInline = isTrivialExp(e1) && occur != DontInline
           if (wantToPostInline) {
             /// If `e1` is to be inlined:
             /// Add map `sym` to `e1` and return `e2` without constructing the let expression.
@@ -465,6 +466,28 @@ object Inliner {
    */
   private def isTrivialAndPure(exp0: LiftedAst.Expression, purity: Purity): Boolean = purity match {
     case Purity.Pure => isTrivialExp(exp0)
+    case _ => false
+  }
+
+  private def isAlwaysPure(exp0: OccurrenceAst.Expression): Boolean = exp0 match {
+    case OccurrenceAst.Expression.Unit(loc) => true
+    case OccurrenceAst.Expression.Null(tpe, loc) => true
+    case OccurrenceAst.Expression.True(loc) => true
+    case OccurrenceAst.Expression.False(loc) => true
+    case OccurrenceAst.Expression.Char(lit, loc) => true
+    case OccurrenceAst.Expression.Float32(lit, loc) => true
+    case OccurrenceAst.Expression.Float64(lit, loc) => true
+    case OccurrenceAst.Expression.Int8(lit, loc) => true
+    case OccurrenceAst.Expression.Int16(lit, loc) => true
+    case OccurrenceAst.Expression.Int32(lit, loc) => true
+    case OccurrenceAst.Expression.Int64(lit, loc) => true
+    case OccurrenceAst.Expression.BigInt(lit, loc) => true
+    case OccurrenceAst.Expression.Str(lit, loc) => true
+    case OccurrenceAst.Expression.Var(sym, tpe, loc) => true
+    case OccurrenceAst.Expression.Closure(sym, freeVars, tpe, loc) => true
+    case OccurrenceAst.Expression.RecordEmpty(tpe, loc) => true
+    case OccurrenceAst.Expression.Lazy(exp, tpe, loc) => true
+    case OccurrenceAst.Expression.Force(exp, tpe, loc) => true
     case _ => false
   }
 

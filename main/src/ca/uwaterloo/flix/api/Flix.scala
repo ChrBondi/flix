@@ -276,6 +276,8 @@ class Flix {
     */
   val jarLoader = new ExternalJarLoader
 
+  var disableEffect: Boolean = false
+
   /**
     * Adds the given string `s` to the list of strings to be parsed.
     */

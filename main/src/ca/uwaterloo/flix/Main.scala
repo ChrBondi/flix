@@ -209,6 +209,8 @@ object Main {
     if (Formatter.hasColorSupport)
       flix.setFormatter(AnsiTerminalFormatter)
 
+    flix.disableEffect = cmdOpts.disableEffects
+
     // evaluate main.
     val timer = new Timer(flix.compile())
     timer.getResult match {
@@ -237,6 +239,7 @@ object Main {
           val results = Tester.test(compilationResult)
           Console.println(results.output(flix.getFormatter))
         }
+
       case Validation.Failure(errors) =>
         flix.mkMessages(errors.sortBy(_.source.name))
           .foreach(println)
@@ -279,7 +282,9 @@ object Main {
                      xnobooltable: Boolean = false,
                      xstatistics: Boolean = false,
                      xstrictmono: Boolean = false,
-                     files: Seq[File] = Seq())
+                     files: Seq[File] = Seq(),
+                     disableEffects: Boolean = false
+                    )
 
   /**
     * A case class representing possible commands.
@@ -436,6 +441,8 @@ object Main {
       opt[Unit]("Xstrictmono").action((_, c) => c.copy(xstrictmono = true)).
         text("[experimental] enable strict monomorphization.")
 
+      opt[Unit]("disable-effect").action((_, c) => c.copy(disableEffects = true)).
+        text("disables the effect system for inlining")
       note("")
 
       // Input files.
