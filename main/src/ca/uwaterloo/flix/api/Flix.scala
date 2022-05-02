@@ -278,6 +278,8 @@ class Flix {
 
   var disableEffect: Boolean = false
 
+  var optmizerLoopCount: Int = 2
+
   /**
     * Adds the given string `s` to the list of strings to be parsed.
     */
@@ -519,6 +521,7 @@ class Flix {
       afterMonomorph <- Monomorph.run(afterLowering)
       afterSimplifier <- Simplifier.run(afterMonomorph)
       afterClosureConv <- ClosureConv.run(afterSimplifier)
+      afterLambdaLift <- LambdaLift.run(afterClosureConv)
       afterLambdaLift <- LambdaLift.run(afterClosureConv)
       afterTailrec <- Tailrec.run(afterLambdaLift)
       afterOptimizer <- Optimizer.run(afterTailrec)

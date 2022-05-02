@@ -210,6 +210,7 @@ object Main {
       flix.setFormatter(AnsiTerminalFormatter)
 
     flix.disableEffect = cmdOpts.disableEffects
+    flix.optmizerLoopCount = cmdOpts.optimizerLoopCount
 
     // evaluate main.
     val timer = new Timer(flix.compile())
@@ -283,7 +284,8 @@ object Main {
                      xstatistics: Boolean = false,
                      xstrictmono: Boolean = false,
                      files: Seq[File] = Seq(),
-                     disableEffects: Boolean = false
+                     disableEffects: Boolean = false,
+                     optimizerLoopCount: Int = 2
                     )
 
   /**
@@ -443,6 +445,9 @@ object Main {
 
       opt[Unit]("disable-effect").action((_, c) => c.copy(disableEffects = true)).
         text("disables the effect system for inlining")
+
+      opt[Int]("loop-count").action((i, c) => c.copy(optimizerLoopCount = i)).
+        text("How many iterations the optimizer runs in")
       note("")
 
       // Input files.
