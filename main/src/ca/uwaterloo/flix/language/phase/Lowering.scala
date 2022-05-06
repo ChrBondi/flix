@@ -538,10 +538,10 @@ object Lowering {
     case Expression.FixpointConstraintSet(cs, _, _, loc) =>
       mkDatalog(cs, loc)
 
-    case Expression.FixpointLambda(preds, exp, _, _, eff, loc) =>
+    case Expression.FixpointLambda(pparams, exp, _, _, eff, loc) =>
       val defn = Defs.lookup(Defs.Rename)
       val defExp = Expression.Def(defn.sym, Types.RenameType, loc)
-      val predExps = mkArray(preds.map(mkPredSym), Type.mkArray(Types.PredSym, loc), loc)
+      val predExps = mkArray(pparams.map(pparam => mkPredSym(pparam.pred)), Type.mkArray(Types.PredSym, loc), loc)
       val argExps = predExps :: visitExp(exp) :: Nil
       val resultType = Types.Datalog
       Expression.Apply(defExp, argExps, resultType, eff, loc)
@@ -1051,7 +1051,9 @@ object Lowering {
   private def mkPredSym(pred: Name.Pred): Expression = pred match {
     case Name.Pred(sym, loc) =>
       val nameExp = Expression.Str(sym, loc)
-      mkTag(Enums.PredSym, "PredSym", nameExp, Types.PredSym, loc)
+      val idExp = Expression.Int64(0, loc)
+      val inner = mkTuple(List(nameExp, idExp), loc)
+      mkTag(Enums.PredSym, "PredSym", inner, Types.PredSym, loc)
   }
 
   /**
@@ -1517,9 +1519,9 @@ object Lowering {
       val e = substExp(exp, subst)
       Expression.Force(e, tpe, eff, loc)
 
-    case Expression.FixpointLambda(preds, exp, stf, tpe, eff, loc) =>
+    case Expression.FixpointLambda(pparams, exp, stf, tpe, eff, loc) =>
       val e = substExp(exp, subst)
-      Expression.FixpointLambda(preds, e, stf, tpe, eff, loc)
+      Expression.FixpointLambda(pparams, e, stf, tpe, eff, loc)
 
     case Expression.FixpointMerge(exp1, exp2, stf, tpe, eff, loc) =>
       val e1 = substExp(exp1, subst)

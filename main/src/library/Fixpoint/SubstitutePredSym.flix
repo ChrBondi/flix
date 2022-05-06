@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Magnus Madsen
+ * Copyright 2022 Magnus Madsen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use Fixpoint/Shared.PredSym;
 
-package ca.uwaterloo.flix.language
+namespace Fixpoint {
 
-import ca.uwaterloo.flix.language.fmt.TestFormatType
-import ca.uwaterloo.flix.language.phase.PhaseSuite
-import org.scalatest.Suites
+    ///
+    /// A type class for types with predicate symbols that can be substituted.
+    ///
+    pub class SubstitutePredSym[t] {
+        pub def substitute(x: t, s: Map[PredSym, PredSym]): t
+    }
 
-class LanguageSuite extends Suites(
-  new PhaseSuite,
-  new TestFlixErrors,
-  new TestFormatType
-)
+}
