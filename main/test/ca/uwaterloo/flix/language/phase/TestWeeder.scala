@@ -613,4 +613,122 @@ class TestWeeder extends FunSuite with TestUtils {
     val result = compile(input, Options.TestWithLibNix)
     expectError[WeederError.ReservedName](result)
   }
+
+  test("ReservedName.Effect.01") {
+    val input =
+      """
+        |eff Pure
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.ReservedName](result)
+  }
+
+  test("ReservedName.Effect.02") {
+    val input =
+      """
+        |eff Read
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.ReservedName](result)
+  }
+
+  test("ReservedName.Effect.03") {
+    val input =
+      """
+        |eff Write
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.ReservedName](result)
+  }
+
+  test("IllegalEffectTypeParams.01") {
+    val input =
+      """
+        |eff MyEffect[a]
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalEffectTypeParams](result)
+  }
+
+  test("IllegalEffectTypeParams.02") {
+    val input =
+      """
+        |eff MyEffect {
+        |    def op[a](x: a): Bool
+        |}
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalEffectTypeParams](result)
+  }
+
+  test("IllegalResume.01") {
+    val input =
+      """
+        |def f(): Bool = resume("Hello!")
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalResume](result)
+  }
+
+  test("IllegalResume.02") {
+    val input =
+      """
+        |def f(): Bool =
+        |   try {
+        |       true
+        |   } catch {
+        |       case _: ##java.lang.Exception => resume(true)
+        |   }
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalResume](result)
+  }
+
+  test("IllegalResume.03") {
+    val input =
+      """
+        |def f(): Bool =
+        |   try {
+        |       resume(true)
+        |   } with Fail {
+        |       def fail() = false
+        |   }
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalResume](result)
+  }
+
+  test("IllegalFormalParamAscription.01") {
+    val input =
+      """
+        |def f(): String =
+        |    try ??? with Fail {
+        |        def fail(x: String) = "hello"
+        |    }
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalFormalParamAscription](result)
+  }
+
+  test("IllegalOperationEffect.01") {
+    val input =
+      """
+        |eff E {
+        |    def op(): Bool & Impure
+        |}
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalOperationEffect](result)
+  }
+
+  test("IllegalOperationEffect.02") {
+    val input =
+      """
+        |eff E {
+        |    def op(): Bool \ E
+        |}
+        |""".stripMargin
+    val result = compile(input, Options.TestWithLibNix)
+    expectError[WeederError.IllegalOperationEffect](result)
+  }
 }

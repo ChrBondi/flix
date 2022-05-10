@@ -733,6 +733,12 @@ object Typer {
           resultEff = Type.mkAnd(eff1, eff2, loc)
         } yield (constrs1 ++ constrs2, resultTyp, resultEff)
 
+      case KindedAst.Expression.Discard(exp, loc) =>
+        for {
+          (constrs, _, eff) <- visitExp(exp)
+          resultTyp = Type.Unit
+        } yield (constrs, resultTyp, eff)
+
       case KindedAst.Expression.Let(sym, mod, exp1, exp2, loc) =>
         // Note: The call to unify on sym.tvar occurs immediately after we have inferred the type of exp1.
         // This ensures that uses of sym inside exp2 are type checked according to this type.
@@ -1374,15 +1380,13 @@ object Typer {
           resultTyp <- unifyTypeM(tvar, Type.mkSchema(schemaRow, loc), loc)
         } yield (constrs.flatten, resultTyp, Type.Pure)
 
-      case KindedAst.Expression.FixpointLambda(preds, exp, tvar, loc) =>
-        val predsWithType = preds.map(pred => (pred, Type.freshVar(Kind.Predicate, loc, text = FallbackText(pred.name))))
+      case KindedAst.Expression.FixpointLambda(pparams, exp, tvar, loc) =>
 
-        def mkRowExtend(p: (Name.Pred, Type), restRow: Type): Type = {
-          val (pred, tpe) = p
-          Type.mkSchemaRowExtend(pred, tpe, restRow, loc)
+        def mkRowExtend(pparam: KindedAst.PredicateParam, restRow: Type): Type = pparam match {
+          case KindedAst.PredicateParam(pred, tpe, loc) => Type.mkSchemaRowExtend(pred, tpe, restRow, tpe.loc)
         }
 
-        def mkFullRow(baseRow: Type): Type = predsWithType.foldRight(baseRow)(mkRowExtend)
+        def mkFullRow(baseRow: Type): Type = pparams.foldRight(baseRow)(mkRowExtend)
 
         val expectedRowType = mkFullRow(Type.freshVar(Kind.SchemaRow, loc, text = FallbackText("row")))
         val resultRowType = mkFullRow(Type.freshVar(Kind.SchemaRow, loc, text = FallbackText("row")))
@@ -1593,7 +1597,7 @@ object Typer {
         TypedAst.Expression.Apply(e, es, subst0(tvar), subst0(evar), loc)
 
       case KindedAst.Expression.Lambda(fparam, exp, tvar, loc) =>
-        val p = visitParam(fparam)
+        val p = visitFormalParam(fparam)
         val e = visitExp(exp, subst0)
         val t = subst0(tvar)
         TypedAst.Expression.Lambda(p, e, t, loc)
@@ -1623,6 +1627,10 @@ object Typer {
         val tpe = e2.tpe
         val eff = Type.mkAnd(e1.eff, e2.eff, loc)
         TypedAst.Expression.Stm(e1, e2, tpe, eff, loc)
+
+      case KindedAst.Expression.Discard(exp, loc) =>
+        val e = visitExp(exp, subst0)
+        TypedAst.Expression.Discard(e, e.eff, loc)
 
       case KindedAst.Expression.Let(sym, mod, exp1, exp2, loc) =>
         val e1 = visitExp(exp1, subst0)
@@ -1885,11 +1893,12 @@ object Typer {
         val cs = cs0.map(visitConstraint)
         TypedAst.Expression.FixpointConstraintSet(cs, Stratification.empty, subst0(tvar), loc)
 
-      case KindedAst.Expression.FixpointLambda(preds, exp, tvar, loc) =>
+      case KindedAst.Expression.FixpointLambda(pparams, exp, tvar, loc) =>
+        val ps = pparams.map(visitPredicateParam)
         val e = visitExp(exp, subst0)
         val tpe = subst0(tvar)
         val eff = e.eff
-        TypedAst.Expression.FixpointLambda(preds, e, Stratification.empty, tpe, eff, loc)
+        TypedAst.Expression.FixpointLambda(ps, e, Stratification.empty, tpe, eff, loc)
 
       case KindedAst.Expression.FixpointMerge(exp1, exp2, loc) =>
         val e1 = visitExp(exp1, subst0)
@@ -1977,8 +1986,14 @@ object Typer {
     /**
       * Applies the substitution to the given list of formal parameters.
       */
-    def visitParam(param: KindedAst.FormalParam): TypedAst.FormalParam =
-      TypedAst.FormalParam(param.sym, param.mod, subst0(param.tpe), param.loc)
+    def visitFormalParam(fparam: KindedAst.FormalParam): TypedAst.FormalParam =
+      TypedAst.FormalParam(fparam.sym, fparam.mod, subst0(fparam.tpe), fparam.loc)
+
+    /**
+      * Applies the substitution to the given list of predicate parameters.
+      */
+    def visitPredicateParam(pparam: KindedAst.PredicateParam): TypedAst.PredicateParam =
+      TypedAst.PredicateParam(pparam.pred, subst0(pparam.tpe), pparam.loc)
 
     visitExp(exp0, subst0)
   }
