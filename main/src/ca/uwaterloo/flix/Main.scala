@@ -160,6 +160,12 @@ object Main {
         System.exit(1)
     }
 
+    // runs the compiler with 0 to `optimizerLoopCount` iterations of the optimizer. Benchmarks throughput and code size
+    if (cmdOpts.optimizerLoopCount.isDefined) {
+      BenchmarkCompiler.benchmarkLoopExperiment(cmdOpts, options)
+      System.exit(0)
+    }
+
     // check if the --Xbenchmark-code-size flag was passed.
     if (cmdOpts.xbenchmarkCodeSize) {
       BenchmarkCompiler.benchmarkCodeSize(options)
@@ -210,7 +216,7 @@ object Main {
       flix.setFormatter(AnsiTerminalFormatter)
 
     flix.disableEffect = cmdOpts.disableEffects
-    flix.optmizerLoopCount = cmdOpts.optimizerLoopCount
+    flix.optmizerLoopCount = cmdOpts.optimizerLoopCount.getOrElse(2)
 
     // evaluate main.
     val timer = new Timer(flix.compile())
@@ -285,7 +291,7 @@ object Main {
                      xstrictmono: Boolean = false,
                      files: Seq[File] = Seq(),
                      disableEffects: Boolean = false,
-                     optimizerLoopCount: Int = 2
+                     optimizerLoopCount: Option[Int] = None
                     )
 
   /**
@@ -446,7 +452,7 @@ object Main {
       opt[Unit]("disable-effect").action((_, c) => c.copy(disableEffects = true)).
         text("disables the effect system for inlining")
 
-      opt[Int]("loop-count").action((i, c) => c.copy(optimizerLoopCount = i)).
+      opt[Int]("loop-count").action((i, c) => c.copy(optimizerLoopCount = Some(i))).
         text("How many iterations the optimizer runs in")
       note("")
 
