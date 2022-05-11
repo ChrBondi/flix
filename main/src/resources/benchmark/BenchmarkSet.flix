@@ -36,20 +36,6 @@ namespace BenchmarkSet {
         not Set.memberOf(24, Set.range(0, 24))
 
     ///
-    /// create a set of `Int32`, delete the lower half of the elements and compute the size.
-    ///
-    @benchmark
-    pub def benchmark06(): Bool =
-        Set.size(Set.fold((acc, y) -> Set.remove(y, acc), Set.range(0, 24), Set.range(0, 12))) == 12
-
-    ///
-    /// create a set of `Int32`, delete the upper half of the elements and compute the size.
-    ///
-    @benchmark
-    pub def benchmark07(): Bool =
-        Set.size(Set.fold((acc, y) -> Set.remove(y, acc), Set.range(0, 24), Set.range(12, 24))) == 12
-
-    ///
     /// create two sets of `Int32`, find their difference and compute the size.
     ///
     @benchmark
