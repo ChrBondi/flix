@@ -7,6 +7,8 @@ import ca.uwaterloo.flix.util.{LocalResource, Options, StatUtils}
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods
 
+import java.io.PrintWriter
+
 /**
   * A collection of internal utilities to measure the performance of the Flix compiler itself.
   */
@@ -71,6 +73,8 @@ object BenchmarkCompiler {
       println(f"Finished $N iterations on $lines%,6d lines of code in $totalTime seconds.")
       println(s"Generated ${java.text.NumberFormat.getIntegerInstance.format(codeSize)} Bytes of code from $lines lines of source code.")
       println(f"====================== Flix Generated Code Size $i ======================")
+
+      Benchmarker.benchmark(results.head, new PrintWriter(System.out, true))(o)
     }
   }
 
