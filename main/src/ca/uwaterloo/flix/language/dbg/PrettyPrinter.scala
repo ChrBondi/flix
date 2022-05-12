@@ -38,7 +38,7 @@ object PrettyPrinter {
         }
         sb.append(") & ")
         sb.append(defn.exp.purity)
-        sb.append(" = ")
+        sb.append(" = \n \t")
         sb.append(fmtDef(defn, formatter).replace(System.lineSeparator(), System.lineSeparator() + (" " * 2)))
         sb.append(System.lineSeparator() + System.lineSeparator())
       }
