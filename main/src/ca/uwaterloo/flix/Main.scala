@@ -160,6 +160,12 @@ object Main {
         System.exit(1)
     }
 
+    // runs the compiler with inline thresholds 4, 8, 16, 32
+    if (cmdOpts.inlineThreshold) {
+      BenchmarkCompiler.benchmarkInlineThresholdExperiment(options)
+      System.exit(0)
+    }
+
     // runs the compiler with 0 to `optimizerLoopCount` iterations of the optimizer. Benchmarks throughput and code size
     if (cmdOpts.optimizerLoopCount.isDefined) {
       BenchmarkCompiler.benchmarkLoopExperiment(cmdOpts, options)
@@ -291,7 +297,8 @@ object Main {
                      xstrictmono: Boolean = false,
                      files: Seq[File] = Seq(),
                      disableEffects: Boolean = false,
-                     optimizerLoopCount: Option[Int] = None
+                     optimizerLoopCount: Option[Int] = None,
+                     inlineThreshold: Boolean = false
                     )
 
   /**
@@ -454,6 +461,10 @@ object Main {
 
       opt[Int]("loop-count").action((i, c) => c.copy(optimizerLoopCount = Some(i))).
         text("How many iterations the optimizer runs in")
+      note("")
+
+      opt[Int]("inline-threshold").action((_, c) => c.copy(inlineThreshold = true)).
+        text("test inline threshold 4, 8, 16, 32")
       note("")
 
       // Input files.

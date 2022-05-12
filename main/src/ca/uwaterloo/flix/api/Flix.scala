@@ -282,6 +282,8 @@ class Flix {
 
   var optmizerLoopCount: Int = 2
 
+  var optmizerInlineThreshold: Int = 8
+
   /**
     * Adds the given string `s` to the list of strings to be parsed.
     */

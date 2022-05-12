@@ -19,9 +19,9 @@ package ca.uwaterloo.flix.language.phase
 import ca.uwaterloo.flix.api.Flix
 import ca.uwaterloo.flix.language.CompilationMessage
 import ca.uwaterloo.flix.language.ast.OccurrenceAst.Occur._
-import ca.uwaterloo.flix.language.ast.OccurrenceAst.{Expression, Root}
+import ca.uwaterloo.flix.language.ast.OccurrenceAst.Root
 import ca.uwaterloo.flix.language.ast.Purity.{Impure, Pure}
-import ca.uwaterloo.flix.language.ast.{BinaryOperator, UnaryOperator, LiftedAst, OccurrenceAst, Purity, SemanticOperator, SourceLocation, Symbol, Type}
+import ca.uwaterloo.flix.language.ast.{BinaryOperator, LiftedAst, OccurrenceAst, Purity, SemanticOperator, SourceLocation, Symbol, Type, UnaryOperator}
 import ca.uwaterloo.flix.util.Validation
 import ca.uwaterloo.flix.util.Validation._
 
@@ -40,12 +40,15 @@ object Inliner {
   /**
    * Candidates for inlining are functions with fewer than `InlineThreshold` expressions
    */
-  private val InlineThreshold = 8
+  private var InlineThreshold = 8
 
   /**
    * Performs inlining on the given AST `root`.
    */
   def run(root: OccurrenceAst.Root)(implicit flix: Flix): Validation[LiftedAst.Root, CompilationMessage] = flix.subphase("Inliner") {
+
+    InlineThreshold = flix.optmizerInlineThreshold
+
     // Visit every definition in the program.
     val defs = root.defs.map {
       case (sym, defn) => sym -> visitDef(defn)(flix, root)

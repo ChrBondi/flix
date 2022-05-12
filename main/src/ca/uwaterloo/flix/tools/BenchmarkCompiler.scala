@@ -42,7 +42,39 @@ object BenchmarkCompiler {
     }
   }
 
+  def benchmarkInlineThresholdExperiment(o: Options): Unit = {
+    // Inline threshold
+    val threshold = Array(4,8,16,32)
+    println(f"Template")
+    println(f"Throughput: min; max; avg; median")
+    println(s"codesize")
+    threshold.indices.foreach { i =>
+      val results = (0 until N).map { _ =>
+        val flix = newFlix(o)
+        flix.optmizerLoopCount = 4
+        flix.optmizerInlineThreshold = threshold.apply(i)
+        flix.compile().get
+      }
+
+      val lines = results.head.getTotalLines.toLong
+      val codeSize = StatUtils.avg(results.map(_.codeSize.toLong).toList).toInt
+      val timings = results.map(_.totalTime).toList
+      val throughputs = timings.map(throughput(lines, _))
+      val min = throughputs.min
+      val max = throughputs.max
+      val avg = StatUtils.avg(throughputs.map(_.toLong)).toInt
+      val median = StatUtils.median(throughputs.map(_.toLong)).toInt
+
+      println(f"Optimizer inlineThreshold = ${threshold.apply(i)}")
+      println(f"$min%,6d;$max%,6d;$avg%,6d;$median%,6d")
+      println(s"${java.text.NumberFormat.getIntegerInstance.format(codeSize)}")
+    }
+  }
+
   def benchmarkLoopExperiment(cmdOpts: CmdOpts, o: Options): Unit = {
+    println(f"Template")
+    println(f"Throughput: min; max; avg; median")
+    println(s"codesize")
     (0 to cmdOpts.optimizerLoopCount.get).foreach { i =>
       val results = (0 until N).map { _ =>
         val flix = newFlix(o)
@@ -50,27 +82,18 @@ object BenchmarkCompiler {
         flix.compile().get
       }
 
-      val threads = o.threads
       val lines = results.head.getTotalLines.toLong
       val codeSize = StatUtils.avg(results.map(_.codeSize.toLong).toList).toInt
       val timings = results.map(_.totalTime).toList
-      val totalTime = (timings.sum / 1_000_000_000L).toInt
       val throughputs = timings.map(throughput(lines, _))
       val min = throughputs.min
       val max = throughputs.max
       val avg = StatUtils.avg(throughputs.map(_.toLong)).toInt
       val median = StatUtils.median(throughputs.map(_.toLong)).toInt
-      val bestIter = timings.indexOf(timings.min)
-      val bestWorstRatio = timings.max.toDouble / timings.min.toDouble
 
-      println(f"====================== Flix Compiler Throughput - Optimizer iterations = $i ======================")
-      println(f"Throughput (best): $max%,6d lines/sec (with $threads threads.)")
-      println(f"  min: $min%,6d, max: $max%,6d, avg: $avg%,6d, median: $median%,6d")
-      println(f"  The highest throughput was in iteration: $bestIter (out of $N).")
-      println(f"  The ratio between the best and worst iteration was: $bestWorstRatio%1.1fx.")
-      println(f"Finished $N iterations on $lines%,6d lines of code in $totalTime seconds.")
-      println(s"Generated ${java.text.NumberFormat.getIntegerInstance.format(codeSize)} Bytes of code from $lines lines of source code.")
-      println(f"====================== Flix Generated Code Size $i ======================")
+      println(f"Optimizer iterations = $i")
+      println(f"$min%,6d;$max%,6d;$avg%,6d;$median%,6d")
+      println(s"${java.text.NumberFormat.getIntegerInstance.format(codeSize)}")
     }
   }
 
