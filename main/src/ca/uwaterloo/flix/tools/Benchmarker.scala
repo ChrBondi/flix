@@ -1,15 +1,14 @@
 package ca.uwaterloo.flix.tools
 
 import java.io.PrintWriter
-
 import ca.uwaterloo.flix.language.ast.Symbol
 import ca.uwaterloo.flix.runtime.CompilationResult
 import ca.uwaterloo.flix.util.Options
-
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
   * Evaluates all benchmarks in a model.
@@ -19,12 +18,12 @@ object Benchmarker {
   /**
     * The number of times to evaluate the benchmark before measurements.
     */
-  val WarmupRounds = 10_000
+  val WarmupRounds = 40_000
 
   /**
     * The number of times to evaluate the benchmark to compute the average.
     */
-  val ActualRounds = 25_000
+  val ActualRounds = 100_000
 
   /**
     * Evaluates all benchmarks.
@@ -68,6 +67,7 @@ object Benchmarker {
         results += ((sym, averageTime))
         sleepAndGC()
       }
+      writer.println(s"  total  ${results.map(_._2).sum /1000 } microseconds.")
       if (!options.json) {
         println()
         println(f"Finished ${benchmarks.size} benchmarks with $ActualRounds iterations each.")
