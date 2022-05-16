@@ -70,6 +70,8 @@ object BenchmarkCompiler {
       println(f"Optimizer inlineThreshold = ${threshold.apply(i)}")
       println(f"$min%,6d;$max%,6d;$avg%,6d;$median%,6d")
       println(s"${java.text.NumberFormat.getIntegerInstance.format(codeSize)}")
+
+      Benchmarker.benchmark(results.head, new PrintWriter(System.out, true))(o)
     }
   }
 
@@ -79,7 +81,7 @@ object BenchmarkCompiler {
     println(s"codesize")
     (0 to cmdOpts.optimizerLoopCount.get).foreach { i =>
       val results = (0 until N).map { _ =>
-        val flix = newFlix(o)
+        val flix = newFlix2(o)
         flix.optmizerLoopCount = i
         flix.compile().get
       }
@@ -97,12 +99,7 @@ object BenchmarkCompiler {
       println(f"$min;$max;$avg;$median")
       println(codeSize)
 
-        val flix2 = newFlix2(o)
-        flix2.optmizerLoopCount = i
-        val result2 = flix2.compile().get
-
-
-      Benchmarker.benchmark(result2, new PrintWriter(System.out, true))(o)
+      //Benchmarker.benchmark(results.head, new PrintWriter(System.out, true))(o)
     }
   }
 
@@ -289,7 +286,7 @@ object BenchmarkCompiler {
   private def newFlix2(o: Options): Flix = {
     val flix = new Flix()
 
-    flix.setOptions(opts = o.copy(incremental = false, loadClassFiles = false))
+    flix.setOptions(opts = o.copy(incremental = false, loadClassFiles = true))
 
     addInputs2(flix)
 
