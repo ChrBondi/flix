@@ -94,9 +94,15 @@ object BenchmarkCompiler {
       val median = StatUtils.median(throughputs.map(_.toLong)).toInt
 
       println(f"Optimizer iterations = $i")
-      println(f"$min%,6d;$max%,6d;$avg%,6d;$median%,6d")
-      println(s"${java.text.NumberFormat.getIntegerInstance.format(codeSize)}")
-      Benchmarker.benchmark(results.head, new PrintWriter(System.out, true))(o)
+      println(f"$min;$max;$avg;$median")
+      println(codeSize)
+
+        val flix2 = newFlix2(o)
+        flix2.optmizerLoopCount = i
+        val result2 = flix2.compile().get
+
+
+      Benchmarker.benchmark(result2, new PrintWriter(System.out, true))(o)
     }
   }
 
@@ -280,6 +286,16 @@ object BenchmarkCompiler {
     flix
   }
 
+  private def newFlix2(o: Options): Flix = {
+    val flix = new Flix()
+
+    flix.setOptions(opts = o.copy(incremental = false, loadClassFiles = false))
+
+    addInputs2(flix)
+
+    flix
+  }
+
   /**
     * Adds test code to the benchmarking suite.
     */
@@ -302,6 +318,15 @@ object BenchmarkCompiler {
     flix.addSourceCode("TestResult.flix", LocalResource.get("/test/ca/uwaterloo/flix/library/TestResult.flix"))
     flix.addSourceCode("TestSet.flix", LocalResource.get("/test/ca/uwaterloo/flix/library/TestSet.flix"))
     flix.addSourceCode("TestValidation.flix", LocalResource.get("/test/ca/uwaterloo/flix/library/TestValidation.flix"))
+  }
+
+  private def addInputs2(flix: Flix): Unit = {
+    // NB: We only use unit tests from the standard library because we want to test real code.
+
+    flix.addSourceCode("BenchmarkList.flix", LocalResource.get("/src/resources/benchmark/BenchmarkList.flix"))
+    flix.addSourceCode("BenchmarkMap.flix", LocalResource.get("/src/resources/benchmark/BenchmarkMap.flix"))
+    flix.addSourceCode("BenchmarkSet.flix", LocalResource.get("/src/resources/benchmark/BenchmarkSet.flix"))
+
   }
 
   case object SummaryStatistics {

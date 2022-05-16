@@ -52,26 +52,13 @@ object Benchmarker {
         }
       }
 
-      /*
-       * Actual Rounds.
-       */
-      if (!options.json) {
-        println("====================== Flix Benchmark ======================")
-      }
       for ((sym, defn) <- benchmarks.toList.sortBy(_._1.loc)) {
         val totalTime = run(defn, ActualRounds)
         val averageTime = totalTime / ActualRounds
-        if (!options.json) {
-          writer.println(f"  $sym  $averageTime%,8d ns.")
-        }
         results += ((sym, averageTime))
         sleepAndGC()
       }
-      writer.println(s"  total  ${results.map(_._2).sum /1000 } microseconds.")
-      if (!options.json) {
-        println()
-        println(f"Finished ${benchmarks.size} benchmarks with $ActualRounds iterations each.")
-      }
+      writer.println(s"  Total runtime  ${results.map(_._2).sum /1000 } microseconds.")
 
       // Print JSON
       if (options.json) {
