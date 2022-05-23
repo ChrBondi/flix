@@ -241,6 +241,7 @@ object Inliner {
       /// Both code size and runtime are reduced
       val isDead = if (flix.disableEffect) occur == Dead && isAlwaysPure(exp1) else isDeadAndPure(occur, exp1.purity)
       if (isDead) {
+        Optimizer.DeadVariables += 1
         visitExp(exp2, subst0)
       } else {
         /// Case 2:
@@ -248,6 +249,7 @@ object Inliner {
         /// There is a small decrease in code size and runtime.
         val wantToPreInline = if (flix.disableEffect) occur == Once && isAlwaysPure(exp1) else isUsedOnceAndPure(occur, exp1.purity)
         if (wantToPreInline) {
+          Optimizer.PreInline += 1
           val subst1 = subst0 + (sym -> Expression.OccurrenceExp(exp1))
           visitExp(exp2, subst1)
         } else {
@@ -257,6 +259,7 @@ object Inliner {
           // Code size and runtime are not impacted, because only trivial expressions are inlined
           val wantToPostInline = isTrivialExp(e1) && occur != DontInline
           if (wantToPostInline) {
+            Optimizer.PostInline += 1
             /// If `e1` is to be inlined:
             /// Add map `sym` to `e1` and return `e2` without constructing the let expression.
             val subst1 = subst0 + (sym -> Expression.LiftedExp(e1))
@@ -290,7 +293,10 @@ object Inliner {
 
     case OccurrenceAst.Expression.Untag(sym, tag, exp, tpe, purity, loc) =>
       val e = visitExp(exp, subst0)
-      LiftedAst.Expression.Untag(sym, tag, e, tpe, purity, loc)
+      e match {
+        case LiftedAst.Expression.Tag(_, _, innerExp, _, _, _) => innerExp
+        case _ => LiftedAst.Expression.Untag(sym, tag, e, tpe, purity, loc)
+      }
 
     case OccurrenceAst.Expression.Index(base, offset, tpe, purity, loc) =>
       val b = visitExp(base, subst0)

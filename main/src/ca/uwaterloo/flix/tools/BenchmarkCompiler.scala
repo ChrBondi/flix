@@ -23,7 +23,7 @@ object BenchmarkCompiler {
     * Outputs statistics about the size of the generated JVM code.
     */
   def benchmarkCodeSize(o: Options): Unit = {
-    val flix = newFlix(o)
+    val flix = newFlix2(o)
     val result = flix.compile().get
     val codeSize = result.codeSize
 
@@ -79,7 +79,8 @@ object BenchmarkCompiler {
     println(f"Template")
     println(f"Throughput: min; max; avg; median")
     println(s"codesize")
-    (0 to cmdOpts.optimizerLoopCount.get).foreach { i =>
+    val iteratins = Array(9,3,8,2,0,10,1,7,4,6,5)
+    iteratins.foreach { i =>
       val results = (0 until N).map { _ =>
         val flix = newFlix2(o)
         flix.optmizerLoopCount = i
@@ -95,7 +96,7 @@ object BenchmarkCompiler {
       val avg = StatUtils.avg(throughputs.map(_.toLong)).toInt
       val median = StatUtils.median(throughputs.map(_.toLong)).toInt
 
-      println(f"Optimizer iterations = $i")
+      println(f"Optimizer iterations = ${i}")
       println(f"$min;$max;$avg;$median")
       println(codeSize)
 

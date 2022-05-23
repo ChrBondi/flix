@@ -29,6 +29,11 @@ import ca.uwaterloo.flix.util.{Formatter, Validation}
  */
 object Optimizer {
 
+  var DeadVariables = 0
+
+  var PreInline = 0
+
+  var PostInline = 0
   /**
    * Returns an optimized version of the given AST `root`.
    */
@@ -40,6 +45,11 @@ object Optimizer {
       val afterInliner = Inliner.run(afterOccurrenceAnalyzer.get)
       result = afterInliner.get
     }
+
+    //println(s"Dead variables: ${DeadVariables}")
+    //println(s"Preinline: ${PreInline}")
+    //println(s"Postinline: ${PostInline}")
+
 
     // Print the ast if debugging is enabled.
     if (flix.options.debug) {
