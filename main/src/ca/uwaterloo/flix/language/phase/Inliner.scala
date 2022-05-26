@@ -293,6 +293,7 @@ object Inliner {
 
     case OccurrenceAst.Expression.Untag(sym, tag, exp, tpe, purity, loc) =>
       val e = visitExp(exp, subst0)
+      // Inline expressions of the form Untag(Tag(e)) => e
       e match {
         case LiftedAst.Expression.Tag(_, _, innerExp, _, _, _) => innerExp
         case _ => LiftedAst.Expression.Untag(sym, tag, e, tpe, purity, loc)

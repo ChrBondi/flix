@@ -131,22 +131,22 @@ def memberOf07(): Bool = List.memberOf(3, 1 :: 2 :: Nil) == false
 // indexOf                                                                 //
 /////////////////////////////////////////////////////////////////////////////
 @test
-def indexOf01(): Bool = List.indexOf(0, Nil) == -1
+def indexOf01(): Bool = List.indexOf(0, Nil) == None
 
 @test
-def indexOf02(): Bool = List.indexOf(0, 1 :: Nil) == -1
+def indexOf02(): Bool = List.indexOf(0, 1 :: Nil) == None
 
 @test
-def indexOf03(): Bool = List.indexOf(1, 1 :: Nil) == 0
+def indexOf03(): Bool = List.indexOf(1, 1 :: Nil) == Some(0)
 
 @test
-def indexOf04(): Bool = List.indexOf(0, 1 :: 2 :: Nil) == -1
+def indexOf04(): Bool = List.indexOf(0, 1 :: 2 :: Nil) == None
 
 @test
-def indexOf05(): Bool = List.indexOf(1, 1 :: 2 :: Nil) == 0
+def indexOf05(): Bool = List.indexOf(1, 1 :: 2 :: Nil) == Some(0)
 
 @test
-def indexOf06(): Bool = List.indexOf(2, 1 :: 2 :: Nil) == 1
+def indexOf06(): Bool = List.indexOf(2, 1 :: 2 :: Nil) == Some(1)
 
 /////////////////////////////////////////////////////////////////////////////
 // find                                                                    //
@@ -1807,6 +1807,30 @@ def foldRight210(): Bool = List.foldRight2((a, b, c) -> if (b) a+c else a*c, 4, 
                          true :: false :: false :: true :: Nil) == -66
 
 /////////////////////////////////////////////////////////////////////////////
+// foldMap                                                                 //
+/////////////////////////////////////////////////////////////////////////////
+
+@test
+def foldMap01(): Bool =
+    List.foldMap(x -> 2 * x, Nil) == 0
+
+@test
+def foldMap02(): Bool =
+    List.foldMap(x -> 2 * x, 1 :: 2 :: Nil) == 6
+
+@test
+def foldMap03(): Bool =
+    List.foldMap(x -> if (x == "a") "b" else x, "a" :: Nil) == "b"
+
+@test
+def foldMap04(): Bool =
+    List.foldMap(x -> if (x == "c") "b" else x, "a" :: "b" :: "c" :: Nil) == "abb"
+
+@test
+def foldMap05(): Bool =
+    List.foldMap(Int32.toString, 1 :: 2 :: 3 :: Nil) == "123"
+
+/////////////////////////////////////////////////////////////////////////////
 // filterMap                                                               //
 /////////////////////////////////////////////////////////////////////////////
 @test
@@ -1860,6 +1884,42 @@ def findMap07(): Bool = List.findMap(i -> if (i rem 2 == 0) Some(i/2) else None,
 
 @test
 def findMap08(): Bool = List.findMap(i -> if (i rem 2 == 0) Some(i/2) else None, 0 :: 1 :: 2 :: 3 :: 4 :: 5 :: 10 :: Nil) == Some(0)
+
+/////////////////////////////////////////////////////////////////////////////
+// toMutDeque                                                              //
+/////////////////////////////////////////////////////////////////////////////
+
+@test
+def toMutDeque01(): Bool = region r {
+    let l = Nil: List[Unit];
+    let d = List.toMutDeque(l, r);
+
+    l == MutDeque.toList(d)
+}
+
+@test
+def toMutDeque02(): Bool = region r {
+    let l = 1 :: 2 :: Nil;
+    let d = List.toMutDeque(l, r);
+
+    l == MutDeque.toList(d)
+}
+
+@test
+def toMutDeque03(): Bool = region r {
+    let l = 3 :: 1 :: 2 :: Nil;
+    let d = List.toMutDeque(l, r);
+
+    l == MutDeque.toList(d)
+}
+
+@test
+def toMutDeque04(): Bool = region r {
+    let l = 'a' :: 'b' :: 'c' :: Nil;
+    let d = List.toMutDeque(l, r);
+
+    l == MutDeque.toList(d)
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // toSet                                                                   //
@@ -1943,30 +2003,36 @@ def foreach02(): Bool & Impure =
     List.foreach(x -> r := x, 1 :: 2 :: 3 :: Nil);
     3 == deref r
 
-/////////////////////////////////////////////////////////////////////////////
-// toArray                                                                 //
-/////////////////////////////////////////////////////////////////////////////
-@test
-def toArray01(): Bool & Impure =
-    let xs: List[Int32] = Nil;
-    let a: Array[Int32] = List.toArray(xs);
-    Array.sameElements(a, []: Array[Int32])
 
+    /////////////////////////////////////////////////////////////////////////////
+    // toArray                                                                 //
+    /////////////////////////////////////////////////////////////////////////////
 
-@test
-def toArray02(): Bool & Impure =
-    let a = List.toArray(1 :: Nil);
-    Array.sameElements(a, [1])
+    @test
+    def toArray01(): Bool = region r {
+        let xs: List[Int32] = Nil;
+        let a = List.toArray(xs, r);
+        Array.sameElements(a, [] @ r)
+    }
 
-@test
-def toArray03(): Bool & Impure =
-    let a = List.toArray(1 :: 2 :: Nil);
-    Array.sameElements(a, [1,2])
+    @test
+    def toArray02(): Bool = region r {
+        let a = List.toArray(1 :: Nil, r);
+        Array.sameElements(a, [1] @ r)
+    }
 
-@test
-def toArray04(): Bool & Impure =
-    let a = List.toArray(1 :: 2 :: 3 :: Nil);
-    Array.sameElements(a, [1,2,3])
+    @test
+    def toArray03(): Bool = region r {
+        let a = List.toArray(1 :: 2 :: Nil, r);
+        Array.sameElements(a, [1, 2] @ r)
+    }
+
+    @test
+    def toArray04(): Bool = region r {
+        let a = List.toArray(1 :: 2 :: 3 :: Nil, r);
+        Array.sameElements(a, [1, 2, 3] @ r)
+    }
+
 
 /////////////////////////////////////////////////////////////////////////////
 // toNel                                                                   //
