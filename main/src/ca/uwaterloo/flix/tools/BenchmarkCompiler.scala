@@ -17,7 +17,7 @@ object BenchmarkCompiler {
   /**
     * The number of compilations to perform when collecting statistics.
     */
-  val N = 10
+  val N = 100
 
   /**
     * Outputs statistics about the size of the generated JVM code.
@@ -40,7 +40,7 @@ object BenchmarkCompiler {
     } else {
       println("====================== Flix Generated Code Size ======================")
       println()
-      println(s"Generated ${java.text.NumberFormat.getIntegerInstance.format(codeSize)} Bytes of code from $lines lines of source code.")
+      println(s"Generated $codeSize Bytes of code from $lines lines of source code.")
     }
   }
 
@@ -206,7 +206,7 @@ object BenchmarkCompiler {
     // Collect data from N iterations.
     //
     val results = (0 until N).map { _ =>
-      val flix = newFlix(o)
+      val flix = newFlix2(o)
       flix.compile().get
     }
 
@@ -257,7 +257,7 @@ object BenchmarkCompiler {
       println()
       println(f"Throughput (best): $max%,6d lines/sec (with $threads threads.)")
       println()
-      println(f"  min: $min%,6d, max: $max%,6d, avg: $avg%,6d, median: $median%,6d")
+      println(f"  min: $min, max: $max, avg: $avg, median: $median")
       println()
       println(f"  The highest throughput was in iteration: $bestIter (out of $N).")
       println(f"  The ratio between the best and worst iteration was: $bestWorstRatio%1.1fx.")
